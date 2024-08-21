@@ -1,0 +1,16 @@
+.github
+.nyc_output
+.scannerwork
+.sonarlint
+.vscode
+coverage
+demo
+docs
+tools
+test
+.eslintrc.json
+.nycrc.json
+CODE_OF_CONDUCT.md
+jsdoc.json
+sonar-project.properties
+yarn-error.log
