@@ -1,5 +1,5 @@
 /**
- * @marketto/belfiore-connector-json 1.0.0
+ * @marketto/belfiore-connector-json 1.1.0
  * Copyright (c) 2019-2024, Marco Ricupero <marco.ricupero@gmail.com>
  * License: MIT
  * ============================================================
@@ -13,7 +13,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var moment = require('moment');
+var dayjs = require('dayjs');
 var belfioreConnector = require('@marketto/belfiore-connector');
 
 /*! *****************************************************************************
@@ -61,15 +61,12 @@ class BelfioreConnector extends belfioreConnector.BelfioreAbstractConnector {
         }
         // Foundation Date
         if (params === null || params === void 0 ? void 0 : params.fromDate) {
-            filteredPlaces = filteredPlaces.filter(({ creationDate }) => { var _a; return !creationDate || ((_a = params === null || params === void 0 ? void 0 : params.fromDate) === null || _a === void 0 ? void 0 : _a.isSameOrAfter(creationDate, "day")); });
+            filteredPlaces = filteredPlaces.filter(({ creationDate }) => !creationDate || !dayjs(params.fromDate).isBefore(creationDate, "day"));
         }
         // Expiration Date
         if (params === null || params === void 0 ? void 0 : params.toDate) {
-            filteredPlaces = filteredPlaces.filter(({ expirationDate }) => {
-                var _a;
-                return !expirationDate ||
-                    ((_a = params === null || params === void 0 ? void 0 : params.toDate) === null || _a === void 0 ? void 0 : _a.isSameOrBefore(expirationDate, "day"));
-            });
+            filteredPlaces = filteredPlaces.filter(({ expirationDate }) => !expirationDate ||
+                !dayjs(params.toDate).isBefore(expirationDate, "day"));
         }
         return filteredPlaces;
     }
@@ -81,7 +78,7 @@ class BelfioreConnector extends belfioreConnector.BelfioreAbstractConnector {
                     !this.placesCache)) {
                 const allPlaces = yield this.placesRetrieverFn();
                 if (typeof this.lifeTimeSec === "number" && !isNaN(this.lifeTimeSec)) {
-                    this.placeExpirationDateTime = moment()
+                    this.placeExpirationDateTime = dayjs()
                         .add(this.lifeTimeSec, "seconds")
                         .toDate();
                 }
@@ -112,32 +109,44 @@ class BelfioreConnector extends belfioreConnector.BelfioreAbstractConnector {
          * @returns Belfiore instance filtered by active date
          * @public
          */
-        this.active = (date = moment()) => new BelfioreConnector({
-            placesRetrieverFn: this.placesRetrieverFn,
-            placesCache: this.placesCache,
-            placeExpirationDateTime: this.placeExpirationDateTime,
-            lifeTimeSec: this.lifeTimeSec,
-            codeMatcher: this.codeMatcher,
-            province: this.province,
-            fromDate: moment(date),
-            toDate: moment(date),
-        });
+        this.active = (date = new Date()) => {
+            var _a, _b, _c, _d;
+            return new BelfioreConnector({
+                placesRetrieverFn: this.placesRetrieverFn,
+                placesCache: this.placesCache,
+                placeExpirationDateTime: this.placeExpirationDateTime,
+                lifeTimeSec: this.lifeTimeSec,
+                codeMatcher: this.codeMatcher,
+                province: this.province,
+                fromDate: Array.isArray(date)
+                    ? new Date(date[0], (_a = date[1]) !== null && _a !== void 0 ? _a : 0, (_b = date[2]) !== null && _b !== void 0 ? _b : 1)
+                    : dayjs(date).toDate(),
+                toDate: Array.isArray(date)
+                    ? new Date(date[0], (_c = date[1]) !== null && _c !== void 0 ? _c : 0, (_d = date[2]) !== null && _d !== void 0 ? _d : 1)
+                    : dayjs(date).toDate(),
+            });
+        };
         /**
          * Returns a Proxied version of Belfiore which filters results by given date ahead
          * @param date Target date to filter places active only for the given date
          * @returns Belfiore instance filtered by active date
          * @public
          */
-        this.from = (date = moment()) => new BelfioreConnector({
-            placesRetrieverFn: this.placesRetrieverFn,
-            placesCache: this.placesCache,
-            placeExpirationDateTime: this.placeExpirationDateTime,
-            lifeTimeSec: this.lifeTimeSec,
-            codeMatcher: this.codeMatcher,
-            province: this.province,
-            fromDate: moment(date),
-            toDate: this.toDate,
-        });
+        this.from = (date = new Date()) => {
+            var _a, _b;
+            return new BelfioreConnector({
+                placesRetrieverFn: this.placesRetrieverFn,
+                placesCache: this.placesCache,
+                placeExpirationDateTime: this.placeExpirationDateTime,
+                lifeTimeSec: this.lifeTimeSec,
+                codeMatcher: this.codeMatcher,
+                province: this.province,
+                fromDate: Array.isArray(date)
+                    ? new Date(date[0], (_a = date[1]) !== null && _a !== void 0 ? _a : 0, (_b = date[2]) !== null && _b !== void 0 ? _b : 1)
+                    : dayjs(date).toDate(),
+                toDate: this.toDate,
+            });
+        };
         /**
          * Returns a Belfiore instance filtered by the given province
          * @param code Province Code (2 A-Z char)
