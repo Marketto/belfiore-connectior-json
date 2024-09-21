@@ -35,8 +35,8 @@
 		"json"
 	],
 	"dependencies": {
-		"@marketto/belfiore-connector": "^2.0.0",
-		"moment": "^2.24.0"
+		"@marketto/belfiore-connector": "^3.0.0",
+		"dayjs": "^1.11.13"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -58,7 +58,7 @@
 		"rollup-plugin-commonjs": "^10.1.0",
 		"rollup-plugin-dts": "^6.1.1",
 		"rollup-plugin-license": "^3.4.0",
-		"rollup-plugin-node-builtins": "^2.1.2",
+		"rollup-plugin-node-builtins": "^2.0.0",
 		"rollup-plugin-ts": "^3.4.5",
 		"sonarqube-scanner": "^2.6.0",
 		"source-map-support": "^0.5.19",

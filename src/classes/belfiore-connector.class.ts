@@ -1,4 +1,4 @@
-import moment, { Moment } from "moment";
+import dayjs from "dayjs";
 import BelfioreConnectorConfig from "../types/belfiore-connector-config.type";
 import {
 	BelfioreAbstractConnector,
@@ -14,16 +14,16 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 	private placesCache?: readonly BelfiorePlace[];
 	private placeExpirationDateTime?: Date;
 	private lifeTimeSec?: number;
-	private toDate: Moment | undefined;
-	private fromDate: Moment | undefined;
+	private toDate: Date | undefined;
+	private fromDate: Date | undefined;
 	private codeMatcher: RegExp | undefined;
 	private province: string | undefined;
 
 	private filterByParams(
 		places: BelfiorePlace[],
 		params?: {
-			toDate?: Moment | undefined;
-			fromDate?: Moment | undefined;
+			toDate?: Date | undefined;
+			fromDate?: Date | undefined;
 			codeMatcher?: RegExp | undefined;
 			province?: string | undefined;
 		}
@@ -48,7 +48,7 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 		if (params?.fromDate) {
 			filteredPlaces = filteredPlaces.filter(
 				({ creationDate }) =>
-					!creationDate || params?.fromDate?.isSameOrAfter(creationDate, "day")
+					!creationDate || !dayjs(params.fromDate).isBefore(creationDate, "day")
 			);
 		}
 
@@ -57,7 +57,7 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 			filteredPlaces = filteredPlaces.filter(
 				({ expirationDate }) =>
 					!expirationDate ||
-					params?.toDate?.isSameOrBefore(expirationDate, "day")
+					!dayjs(params.toDate).isBefore(expirationDate, "day")
 			);
 		}
 
@@ -73,7 +73,7 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 		) {
 			const allPlaces = await this.placesRetrieverFn();
 			if (typeof this.lifeTimeSec === "number" && !isNaN(this.lifeTimeSec)) {
-				this.placeExpirationDateTime = moment()
+				this.placeExpirationDateTime = dayjs()
 					.add(this.lifeTimeSec, "seconds")
 					.toDate();
 			}
@@ -255,7 +255,7 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 	 * @returns Belfiore instance filtered by active date
 	 * @public
 	 */
-	public active = (date: MultiFormatDate = moment()): BelfioreConnector =>
+	public active = (date: MultiFormatDate = new Date()): BelfioreConnector =>
 		new BelfioreConnector({
 			placesRetrieverFn: this.placesRetrieverFn,
 			placesCache: this.placesCache,
@@ -263,8 +263,12 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 			lifeTimeSec: this.lifeTimeSec,
 			codeMatcher: this.codeMatcher,
 			province: this.province,
-			fromDate: moment(date),
-			toDate: moment(date),
+			fromDate: Array.isArray(date)
+				? new Date(date[0], date[1] ?? 0, date[2] ?? 1)
+				: dayjs(date).toDate(),
+			toDate: Array.isArray(date)
+				? new Date(date[0], date[1] ?? 0, date[2] ?? 1)
+				: dayjs(date).toDate(),
 		} as any);
 
 	/**
@@ -273,7 +277,7 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 	 * @returns Belfiore instance filtered by active date
 	 * @public
 	 */
-	public from = (date: MultiFormatDate = moment()): BelfioreConnector =>
+	public from = (date: MultiFormatDate = new Date()): BelfioreConnector =>
 		new BelfioreConnector({
 			placesRetrieverFn: this.placesRetrieverFn,
 			placesCache: this.placesCache,
@@ -281,7 +285,9 @@ export default class BelfioreConnector extends BelfioreAbstractConnector {
 			lifeTimeSec: this.lifeTimeSec,
 			codeMatcher: this.codeMatcher,
 			province: this.province,
-			fromDate: moment(date),
+			fromDate: Array.isArray(date)
+				? new Date(date[0], date[1] ?? 0, date[2] ?? 1)
+				: dayjs(date).toDate(),
 			toDate: this.toDate,
 		} as any);
 
